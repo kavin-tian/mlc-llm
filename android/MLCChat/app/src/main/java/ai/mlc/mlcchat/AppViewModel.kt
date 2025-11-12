@@ -44,7 +44,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         emptyList<ModelRecord>().toMutableList()
     )
     private val application = getApplication<Application>()
-    private val appDirFile = application.getExternalFilesDir("")
+    private val appDirFile: File = application.getExternalFilesDir("") 
+        ?: application.filesDir // 如果外部存储不可用，使用内部存储作为后备
     private val gson = Gson()
     private val modelIdSet = emptySet<String>().toMutableSet()
 
@@ -183,10 +184,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val url = URL("${modelUrl}${ModelUrlSuffix}${ModelConfigFilename}")
                 val tempId = UUID.randomUUID().toString()
-                val tempFile = File(
-                    application.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                    tempId
-                )
+                val downloadsDir = application.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                    ?: application.filesDir // 如果外部存储不可用，使用内部存储作为后备
+                val tempFile = File(downloadsDir, tempId)
                 url.openStream().use {
                     Channels.newChannel(it).use { src ->
                         FileOutputStream(tempFile).use { fileOutputStream ->
